@@ -307,10 +307,10 @@ func check_shop(game) -> void:
 		for slot in range(game.SLOT_NAMES.size()):
 			var bits = game.equipped[2] & game.slot_mask(slot)
 			check(bits == 0 or (bits & (bits-1)) == 0, "Multiple items equipped in one slot")
-	check(game.owned[2] == game.ITEM_MASK and game.wallets[2] == 999641, "New catalog prices or ownership incorrect")
+	check(game.owned[2] == game.ITEM_MASK and game.wallets[2] == 999543, "New catalog prices or ownership incorrect")
 	select_shop_item(game, 2)
 	game.down(Vector2(180,510))
-	check(game.wearing(2) and not game.wearing(12) and game.wallets[2] == 999641, "Owned slot swap charged coins or retained gold chain")
+	check(game.wearing(2) and not game.wearing(12) and game.wallets[2] == 999543, "Owned slot swap charged coins or retained gold chain")
 	check(game.normalize_equipment(63) == 63, "Legacy equipment changed during migration")
 	var purchases = game.owned.duplicate()
 	var balances = game.wallets.duplicate()

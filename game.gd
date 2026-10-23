@@ -35,11 +35,11 @@ var tones: Dictionary = {}
 var capture_mode = ""
 var capture_frames = 0
 const MAX_COINS = 999999
-const SHOP_NAMES = ["FEDORA", "PIKACHU TAIL", "NECKTIE", "PIXEL SWORD", "PIXEL SHIELD", "MATRIX CODE", "PEG LEG", "CAST", "CAMERA", "SUNGLASSES", "EYEGLASSES", "SILVER CHAIN", "GOLD CHAIN", "EYEPATCH", "ARMY HELMET", "TOP HAT", "SNOW", "PROPELLER BEANIE", "TRAFFIC CONE", "LASER EYES", "HEADPHONES", "PIZZA SLICE", "MICROPHONE", "LEFT ROLLER SKATE", "RIGHT ROLLER SKATE", "DEVIL TAIL", "CONCERT STAGE", "RED PHASE SWORD", "BLUE PHASE SWORD", "SPACE HELMET", "SODA BOTTLE", "MILKSHAKE", "NIGHT VISION", "GUITAR NECK", "PAINT BRUSH", "PAINT PALETTE", "GAME CONTROLLER", "RADIOACTIVE", "PACO", "PEACE", "USA FLAG", "ITS LOGO", "JOLLY ROGER", "DORITO", "DOMINO", "EMBER", "Y2K PURSE", "CARDBOARD BOX", "SPIKY COLLAR", "UNDERWATER", "SPACE", "JIMOTHY"]
-const SLOT_NAMES = ["HEAD", "EYES", "NECK", "LEFT ARM", "RIGHT ARM", "LEFT FOOT", "RIGHT FOOT", "TAIL", "BACKGROUND", "SYMBOL", "PET", "SPECIAL SKIN"]
-const ITEM_SLOTS = [0,7,2,4,3,8,5,6,2,1,1,2,2,1,0,0,8,0,0,1,2,3,4,5,6,7,8,4,3,0,4,3,1,7,4,3,4,8,10,9,9,9,9,11,11,11,3,0,2,8,8,10]
-const ITEM_MASK = (1 << 52) - 1
-const SHOP_PRICES = [3,5,3,5,5,20,3,3,10,3,3,3,3,5,5,3,10,5,5,10,5,3,5,5,5,5,15,10,10,5,3,3,5,5,3,3,3,20,10,3,3,3,3,20,20,20,5,3,3,15,15,10]
+const SHOP_NAMES = ["FEDORA", "PIKACHU TAIL", "NECKTIE", "PIXEL SWORD", "PIXEL SHIELD", "MATRIX CODE", "PEG LEG", "CAST", "CAMERA", "SUNGLASSES", "EYEGLASSES", "SILVER CHAIN", "GOLD CHAIN", "EYEPATCH", "ARMY HELMET", "TOP HAT", "SNOW", "PROPELLER BEANIE", "TRAFFIC CONE", "LASER EYES", "HEADPHONES", "PIZZA SLICE", "MICROPHONE", "ROLLER SKATES", "BUNNY SLIPPERS", "DEVIL TAIL", "CONCERT STAGE", "RED PHASE SWORD", "BLUE PHASE SWORD", "SPACE HELMET", "SODA BOTTLE", "MILKSHAKE", "NIGHT VISION", "GUITAR NECK", "PAINT BRUSH", "PAINT PALETTE", "GAME CONTROLLER", "RADIOACTIVE", "PACO", "PEACE", "USA FLAG", "ITS LOGO", "JOLLY ROGER", "DORITO", "DOMINO", "EMBER", "Y2K PURSE", "CARDBOARD BOX", "SPIKY COLLAR", "UNDERWATER", "SPACE", "JIMOTHY", "CRT TELEMETRY", "SINGULARITY", "ELITESEUM PIT", "VIP LAMINATE", "PIXEL TORCH", "HAZARD BOOTS", "COMBAT BOOTS", "CHECKER SLIPONS", "MAG BOOTS", "LED SNEAKERS", "DIVING FINS", "TUBE SOCKS"]
+const SLOT_NAMES = ["HEAD", "EYES", "NECK", "LEFT ARM", "RIGHT ARM", "FEET", "TAIL", "BACKGROUND", "SYMBOL", "PET", "SPECIAL SKIN"]
+const ITEM_SLOTS = [0, 6, 2, 4, 3, 7, 5, 5, 2, 1, 1, 2, 2, 1, 0, 0, 7, 0, 0, 1, 2, 3, 4, 5, 5, 6, 7, 4, 3, 0, 4, 3, 1, 6, 4, 3, 4, 7, 9, 8, 8, 8, 8, 10, 10, 10, 3, 0, 2, 7, 7, 9, 7, 6, 7, 2, 4, 5, 5, 5, 5, 5, 5, 5]
+const ITEM_MASK = -1
+const SHOP_PRICES = [3,5,3,5,5,20,3,3,10,3,3,3,3,5,5,3,10,5,5,10,5,3,5,5,5,5,15,10,10,5,3,3,5,5,3,3,3,20,10,3,3,3,3,20,20,20,5,3,3,15,15,10,20,10,20,5,5, 5,5,5,10,5,5,3]
 const DEV_COINS_ENABLED = false # Public builds never expose the testing coin grant.
 var wallets = [0, 0, 0]
 var owned = [0, 0, 0]
@@ -159,30 +159,86 @@ func _ready() -> void:
 		for item in [46,47,48,49 if capture_mode == "new_ocean" else 50]:
 			equip_item(item)
 		shop_open = true
-		shop_slot = 8
+		shop_slot = 7
 		shop_item = 49 if capture_mode == "new_ocean" else 50
 		shop_page = 0
 		shop_preview = true
+	if capture_mode in ["telemetry", "shop_telemetry"]:
+		equipped = [0,0,0]
+		equip_item(52)
+		shop_open = capture_mode == "shop_telemetry"
+		shop_slot = 7
+		shop_item = 52
+		shop_page = 1
+		shop_preview = true
+		clock = 2.0
+	if capture_mode in ["new_outfit", "pit_outfit"]:
+		reactor.difficulty_mode = 0
+		mode = Mode.READY
+		reactor.charge = 0.55
+		shown_charge = 0.55
+		equipped = [0,0,0]
+		equip_item(53)
+		equip_item(54)
+		equip_item(55)
+		equip_item(56)
+		clock = 2.0
+	if capture_mode in ["shop_torch", "shop_pit"]:
+		reactor.difficulty_mode = 0
+		mode = Mode.READY
+		wallets = [123, 0, 0]
+		owned[0] = ITEM_MASK
+		equipped[0] = 0
+		shop_open = true
+		shop_slot = 4 if capture_mode == "shop_torch" else 7
+		shop_item = 56 if capture_mode == "shop_torch" else 54
+		shop_page = 1
+		shop_preview = true
+		clock = 2.0
+	if capture_mode in ["feet_skates", "feet_cast", "feet_peg", "feet_bunny", "feet_hazard", "feet_combat", "feet_checker", "feet_mag", "feet_led", "feet_fins", "feet_socks", "shop_feet", "shop_feet_p2"]:
+		reactor.difficulty_mode = 0
+		mode = Mode.READY
+		wallets = [123, 0, 0]
+		owned[0] = ITEM_MASK
+		equipped[0] = 0
+		var f_item = 23
+		if capture_mode == "feet_cast": f_item = 7
+		elif capture_mode == "feet_peg": f_item = 6
+		elif capture_mode == "feet_bunny" or capture_mode == "shop_feet": f_item = 24
+		elif capture_mode == "feet_hazard": f_item = 57
+		elif capture_mode == "feet_combat": f_item = 58
+		elif capture_mode == "feet_checker": f_item = 59
+		elif capture_mode == "feet_mag": f_item = 60
+		elif capture_mode == "feet_led": f_item = 61
+		elif capture_mode == "feet_fins": f_item = 62
+		elif capture_mode == "feet_socks" or capture_mode == "shop_feet_p2": f_item = 63
+		equip_item(f_item)
+		shop_open = capture_mode in ["shop_feet", "shop_feet_p2"]
+		shop_slot = 5
+		shop_item = f_item
+		shop_page = 1 if capture_mode == "shop_feet_p2" else 0
+		shop_preview = true
+		clock = 2.0
 	if capture_mode.begins_with("skin_"):
 		equipped = [0,0,0]
 		shop_open = true
-		shop_slot = 11
+		shop_slot = 10
 		shop_item = 43+int(capture_mode.trim_prefix("skin_"))
 		shop_preview = true
 	if capture_mode.begins_with("symbol_"):
 		shop_open = true
-		shop_slot = 9
+		shop_slot = 8
 		shop_item = 39+int(capture_mode.trim_prefix("symbol_"))
 		shop_preview = true
 	if capture_mode == "shop_jimothy":
 		equipped = [0,0,0]
 		shop_open = true
-		shop_slot = 10
+		shop_slot = 9
 		shop_item = 51
 		clock = 1.0
 	if capture_mode == "shop_paco":
 		shop_open = true
-		shop_slot = 10
+		shop_slot = 9
 		shop_item = 38
 		clock = 1.0
 	if capture_mode in ["shop", "outfit", "shop_neck", "shop_eyes", "snow_outfit"]:
@@ -194,7 +250,7 @@ func _ready() -> void:
 		shop_open = capture_mode.begins_with("shop")
 		if capture_mode in ["shop_neck", "shop_eyes", "snow_outfit"]:
 			owned[0] = ITEM_MASK
-			equipped[0] = (1<<6)|(1<<7)|(1<<8)|(1<<10)|(1<<15)|(1<<16)
+			equipped[0] = (1<<6)|(1<<8)|(1<<10)|(1<<15)|(1<<16)
 			shop_slot = 1 if capture_mode == "shop_eyes" else 2
 			shop_item = 10 if shop_slot == 1 else 8
 		clock = 2.5
@@ -203,7 +259,7 @@ func _ready() -> void:
 		mode = Mode.READY
 		owned[0] = ITEM_MASK
 		equipped[0] = 0
-		for item in [17,19,20,21,22,23,24,25,26]:
+		for item in [17,19,20,21,22,23,25,26]:
 			equip_item(item)
 		shop_open = capture_mode == "shop_head_new"
 		shop_slot = 0
@@ -602,6 +658,8 @@ func draw_cat(cx: float, cy: float, charge: float) -> void:
 		p.rect(cx+rx+10,cy-9,13,21,gold)
 		p.rect(cx+rx+4,cy-22,24,16,gold)
 		p.rect(cx+rx+14,cy-40,17,21,gold)
+	elif wearing(53):
+		draw_singularity_tail(cx,cy,rx)
 	elif skin > 0:
 		draw_mascot_tail(cx+rx-8,cy,skin,fur,belly)
 	else:
@@ -668,23 +726,48 @@ func draw_cat(cx: float, cy: float, charge: float) -> void:
 	p.rect(cx+32,hy+22,13,2,CYAN)
 	p.ellipse(cx-rx+24,cy+10,12,9,shade)
 	p.ellipse(cx+rx-24,cy+10,12,9,shade)
-	if wearing(24):
+	# Feet cosmetics (Category 5: FEET)
+	if wearing(23): # Roller skates on both feet
 		draw_skate(cx-21,cy+ry)
-	elif wearing(7): # Right foot: viewer's left.
-		p.rect(cx-34,cy+ry-9,27,17,Color("eff2e5"))
-		for line in range(3):
-			p.rect(cx-32,cy+ry-6+line*5,23,1,Color("a7b7ba"))
-		p.rect(cx-34,cy+ry+4,9,4,Color("d283a3"))
-	else:
-		p.rect(cx-32,cy+ry-5,23,10,paw)
-	if wearing(23):
 		draw_skate(cx+21,cy+ry)
-	elif wearing(6): # Left foot: viewer's right.
-		p.rect(cx+12,cy+ry-7,17,6,Color("bcc6cd"))
-		p.rect(cx+17,cy+ry-1,8,14,Color("9c6745"))
-		p.rect(cx+19,cy+ry,2,12,Color("d8a06a"))
-		p.rect(cx+15,cy+ry+12,12,3,Color("493729"))
-	else:
+	elif wearing(24): # Bunny slippers on both feet
+		draw_bunny_slippers(cx-21,cy+ry)
+		draw_bunny_slippers(cx+21,cy+ry)
+	elif wearing(57): # Hazard steel-toe boots
+		draw_hazard_boots(cx-21,cy+ry)
+		draw_hazard_boots(cx+21,cy+ry)
+	elif wearing(58): # Combat boots (Docs)
+		draw_combat_boots(cx-21,cy+ry)
+		draw_combat_boots(cx+21,cy+ry)
+	elif wearing(59): # Checkerboard slip-ons
+		draw_checker_slipons(cx-21,cy+ry)
+		draw_checker_slipons(cx+21,cy+ry)
+	elif wearing(60): # Mag boots
+		draw_mag_boots(cx-21,cy+ry)
+		draw_mag_boots(cx+21,cy+ry)
+	elif wearing(61): # LED high-top sneakers
+		draw_led_sneakers(cx-21,cy+ry)
+		draw_led_sneakers(cx+21,cy+ry)
+	elif wearing(62): # Diving fins
+		draw_diving_fins(cx-21,cy+ry,-1)
+		draw_diving_fins(cx+21,cy+ry,1)
+	elif wearing(63): # Mismatched athletic tube socks
+		draw_tube_socks(cx-21,cy+ry,false)
+		draw_tube_socks(cx+21,cy+ry,true)
+	elif wearing(6): # Peg leg on right foot (viewer's left), normal paw on left
+		p.rect(cx-29,cy+ry-7,17,6,Color("bcc6cd"))
+		p.rect(cx-25,cy+ry-1,8,14,Color("9c6745"))
+		p.rect(cx-23,cy+ry,2,12,Color("d8a06a"))
+		p.rect(cx-27,cy+ry+12,12,3,Color("493729"))
+		p.rect(cx+9,cy+ry-5,23,10,paw)
+	elif wearing(7): # Cast on left foot (viewer's right), normal paw on right
+		p.rect(cx-32,cy+ry-5,23,10,paw)
+		p.rect(cx+7,cy+ry-9,27,17,Color("eff2e5"))
+		for line in range(3):
+			p.rect(cx+9,cy+ry-6+line*5,23,1,Color("a7b7ba"))
+		p.rect(cx+25,cy+ry+4,9,4,Color("d283a3"))
+	else: # Default paws on both feet
+		p.rect(cx-32,cy+ry-5,23,10,paw)
 		p.rect(cx+9,cy+ry-5,23,10,paw)
 	if wearing(38):
 		draw_paco(cx+112,cy+ry+5)
@@ -702,6 +785,8 @@ func draw_cat(cx: float, cy: float, charge: float) -> void:
 		p.rect(cx-5,hy+32,10,9,Color("ff6587"))
 		p.rect(cx-4,hy+42,8,21,Color("c13264"))
 		p.rect(cx-7,hy+57,14,9,Color("ff6587"))
+	if wearing(55):
+		draw_vip_laminate(cx, hy)
 	if wearing(3): # Cat's right hand is on the viewer's left.
 		var hand = cx-rx+24
 		p.rect(hand-5,cy-40,10,45,Color("789cb6"))
@@ -709,6 +794,8 @@ func draw_cat(cx: float, cy: float, charge: float) -> void:
 		p.rect(hand-13,cy+2,26,5,Color("ffdc71"))
 		p.rect(hand-3,cy+7,6,17,Color("916345"))
 		p.ellipse(hand,cy+11,6,5,fur)
+	if wearing(56):
+		draw_pixel_torch(cx-rx+24, cy, paw)
 	if wearing(4):
 		var hand = cx+rx-24
 		p.rect(hand-18,cy-7,36,32,Color("6e879c"))
@@ -1052,8 +1139,8 @@ func draw_shop() -> void:
 		p.text("< PREV",98,478,CYAN,1,true)
 		p.text("NEXT >  %d/%d" % [shop_page+1,ceili(items.size()/6.0)],262,478,CYAN,1,true)
 	if shop_item < 0:
-		p.text("RADIATION / DEFAULT" if shop_slot == 9 else "SPECIAL SKINS / COMING SOON",180,409,gold,1,true)
-		p.text("YOUR ORIGINAL CHEST EMBLEM" if shop_slot == 9 else "THREE CATS. THREE NEW LOOKS.",180,434,MUTED,1,true)
+		p.text("RADIATION / DEFAULT" if shop_slot == 8 else "SPECIAL SKINS / COMING SOON",180,409,gold,1,true)
+		p.text("YOUR ORIGINAL CHEST EMBLEM" if shop_slot == 8 else "THREE CATS. THREE NEW LOOKS.",180,434,MUTED,1,true)
 		p.box(20,586,320,40,CYAN)
 		p.text("BACK TO CAT",180,600,CYAN,2,true)
 		return
@@ -1068,7 +1155,11 @@ func draw_shop() -> void:
 	p.text("BACK TO CAT",180,600,CYAN,2,true)
 
 func draw_background(x: int, y: int, w: int, h: int) -> void:
-	if wearing(49):
+	if wearing(54):
+		draw_eliteseum_pit(x, y, w, h)
+	elif wearing(52):
+		draw_crt_telemetry(x, y, w, h)
+	elif wearing(49):
 		var time = 0.0 if reduced else clock
 		p.rect(x,y,w,h,Color("092330"))
 		for band in range(6):
@@ -1158,6 +1249,117 @@ func draw_skate(cx: float, cy: float) -> void:
 		p.rect(cx+wheel-1,cy+12,3,3,Color("564061"))
 	for lace in range(3):
 		p.rect(cx-6,cy-7+lace*4,10,1,Color("5c6882"))
+
+func draw_bunny_slippers(cx: float, cy: float) -> void:
+	# Fluffy white/pink plush slipper body
+	p.rect(cx-12, cy-6, 24, 11, Color("fff2f7"))
+	p.rect(cx-14, cy-2, 28, 8, Color("fff2f7"))
+	p.rect(cx-11, cy+5, 22, 2, Color("ebd2dd")) # Sole shadow
+	# Bunny ears (tall fluffy ears angled up)
+	p.rect(cx-9, cy-17, 5, 12, Color("fff2f7"))
+	p.rect(cx-8, cy-15, 3, 8, Color("ffafcb"))
+	p.rect(cx+4, cy-17, 5, 12, Color("fff2f7"))
+	p.rect(cx+5, cy-15, 3, 8, Color("ffafcb"))
+	# Embroidered bunny face on slipper toe
+	p.rect(cx-6, cy, 2, 2, Color("201a24")) # Eye
+	p.rect(cx+4, cy, 2, 2, Color("201a24")) # Eye
+	p.rect(cx-1, cy+2, 2, 2, Color("ff598f")) # Nose
+	p.rect(cx-9, cy+1, 2, 2, Color("ffb8cf")) # Blush
+	p.rect(cx+7, cy+1, 2, 2, Color("ffb8cf")) # Blush
+
+func draw_hazard_boots(cx: float, cy: float) -> void:
+	# Heavy dark-slate lug-soled industrial boots with caution-yellow steel caps
+	p.rect(cx-11, cy-10, 22, 14, Color("1e2634"))
+	p.rect(cx-13, cy-3, 26, 9, Color("2d3748"))
+	p.rect(cx-14, cy+5, 28, 4, Color("141820"))
+	p.rect(cx-10, cy+7, 4, 2, INK)
+	p.rect(cx+2, cy+7, 4, 2, INK)
+	# Caution-yellow steel toe cap
+	p.rect(cx-14, cy-1, 13, 7, Color("f3ec32"))
+	p.rect(cx-10, cy+1, 4, 3, Color("141820"))
+	# Brass eyelets & laces
+	p.rect(cx-1, cy-7, 3, 2, Color("e5c58a"))
+	p.rect(cx-1, cy-3, 3, 2, Color("e5c58a"))
+	# Hi-vis pull collar
+	p.rect(cx+8, cy-12, 3, 4, Color("f3ec32"))
+
+func draw_combat_boots(cx: float, cy: float) -> void:
+	# 8-eyelet punk combat boots with yellow welt stitching
+	p.rect(cx-10, cy-13, 20, 16, Color("12141a"))
+	p.rect(cx-13, cy-3, 26, 8, Color("12141a"))
+	# Yellow welt stitch
+	p.rect(cx-14, cy+4, 28, 2, Color("f9ea48"))
+	# Commando lug sole
+	p.rect(cx-14, cy+6, 28, 4, Color("23211e"))
+	# Silver ladder laces
+	for l in range(4):
+		p.rect(cx-4, cy-10+l*3, 8, 1, Color("dcdfe5"))
+	# Heel pull loop
+	p.rect(cx+7, cy-17, 3, 6, Color("f9ea48"))
+	p.rect(cx+8, cy-15, 1, 2, INK)
+
+func draw_checker_slipons(cx: float, cy: float) -> void:
+	# Canvas slip-ons with vulcanized white sole & checkerboard vamp
+	p.rect(cx-13, cy-4, 26, 9, Color("fbfbfa"))
+	p.rect(cx-14, cy+5, 28, 4, Color("f0f0ee"))
+	p.rect(cx-14, cy+6, 28, 1, Color("181a20"))
+	p.rect(cx+11, cy+5, 3, 3, Color("d9384e"))
+	# Checkerboard 3x5 pattern
+	for row in range(3):
+		for col in range(5):
+			if (row + col) % 2 == 0:
+				p.rect(cx-10+col*4, cy-3+row*2, 4, 2, Color("14161d"))
+	# Elastic gore on side
+	p.rect(cx-2, cy-5, 4, 3, Color("20242e"))
+
+func draw_mag_boots(cx: float, cy: float) -> void:
+	# Pressurized lunar astronaut boots with glowing cyan magnetic solenoids
+	p.rect(cx-11, cy-13, 22, 5, Color("9bb1c4"))
+	p.rect(cx-13, cy-9, 26, 14, Color("edf3f7"))
+	p.rect(cx+8, cy-5, 5, 8, Color("67798c"))
+	p.rect(cx-15, cy+5, 30, 4, Color("1b2636"))
+	p.rect(cx-13, cy+3, 26, 1, Color("38efea"))
+	var glow = 0.6 if reduced else 0.7 + 0.3 * sin(clock * 6.0)
+	var glow_color = Color(Color("38efea"), glow)
+	p.rect(cx-11, cy+6, 6, 3, glow_color)
+	p.rect(cx+4, cy+6, 6, 3, glow_color)
+
+func draw_led_sneakers(cx: float, cy: float) -> void:
+	# Retro 90s basketball high-tops with flashing neon sole LEDs
+	p.rect(cx-10, cy-13, 20, 6, Color("2b3240"))
+	p.rect(cx-12, cy-8, 24, 13, Color("2b3240"))
+	p.rect(cx-14, cy-2, 28, 7, Color("485366"))
+	p.rect(cx-6, cy-4, 11, 2, PINK)
+	p.rect(cx-14, cy+5, 28, 4, Color("141e2a"))
+	# 4 pulsing micro-LEDs along the sole
+	var phase = 0 if reduced else int(fposmod(clock * 6.0, 4.0))
+	for led in range(4):
+		var lx = cx-10+led*6
+		var is_active = (led == phase) or reduced
+		var led_col = PINK if (led % 2 == 0) else CYAN
+		if not is_active:
+			led_col = Color(led_col, 0.25)
+		p.rect(lx, cy+6, 3, 2, led_col)
+
+func draw_diving_fins(cx: float, cy: float, side: int) -> void:
+	# Wide caution-yellow rubber swim fins flared outward
+	p.rect(cx-10, cy-4, 20, 9, Color("2a323c"))
+	var ox = side * 4
+	p.rect(cx-18+ox, cy+2, 36, 5, Color("f6d83a"))
+	p.rect(cx-20+ox, cy+6, 40, 3, Color("f6d83a"))
+	p.rect(cx-13+ox, cy+3, 3, 4, Color("303844"))
+	p.rect(cx+9+ox, cy+3, 3, 4, Color("303844"))
+	p.rect(cx-5+ox, cy+2, 2, 6, Color("b87e14"))
+	p.rect(cx+3+ox, cy+2, 2, 6, Color("b87e14"))
+
+func draw_tube_socks(cx: float, cy: float, is_left_foot: bool) -> void:
+	# Ribbed athletic cotton tube socks with mismatched athletic stripes
+	p.rect(cx-10, cy-15, 20, 4, Color("ebebe0"))
+	p.rect(cx-11, cy-12, 22, 18, Color("f4f4ec"))
+	p.rect(cx-9, cy-1, 18, 1, Color("dcdcc8"))
+	var stripe_col = Color("2a75d3") if is_left_foot else Color("e5384f")
+	p.rect(cx-10, cy-12, 20, 2, stripe_col)
+	p.rect(cx-10, cy-8, 20, 2, stripe_col)
 
 func draw_phase_sword(hand: float, cy: float, tint: Color) -> void:
 	var time = 0.0 if reduced else clock
@@ -1341,3 +1543,351 @@ func draw_jimothy(cx: float, ground: float) -> void:
 	p.rect(x-6,y+4,9,6,Color("e2dfcd"))
 	p.rect(x-4,y+3,5,3,mask)
 	p.rect(x-2,y+8,2,2,mask)
+
+func draw_crt_telemetry(x: int, y: int, w: int, h: int) -> void:
+	var time = 0.0 if reduced else clock
+	var charge_val = shown_charge
+	var bg_dark = Color("040a06")
+	var rack_bezel = Color("0a1a11")
+	var rack_grid = Color("122a1c")
+	var green_dim = Color("1b5930")
+	var green_mid = Color("2eb859")
+	var green_hot = Color("47ff78")
+	var yellow_warn = Color("ffdc71")
+	var red_alert = Color("ff4055")
+
+	# Base rack dark chassis
+	p.rect(x, y, w, h, bg_dark)
+
+	# Structural server-rack frame borders and divider seams
+	for seam_x in range(x, x + w, 28):
+		p.rect(seam_x, y, 1, h, Color("08140c"))
+	for seam_y in range(y, y + h, 20):
+		p.rect(x, seam_y, w, 1, Color("08140c"))
+
+	# Layout calculations for CRT screens
+	var mon_w = floori(w * 0.28)
+	var mon_h = floori(h * 0.40)
+
+	# MONITOR 1: Left Oscilloscope CRT
+	var m1_x = x + 6
+	var m1_y = y + 8
+	p.rect(m1_x, m1_y, mon_w, mon_h, rack_bezel)
+	p.box(m1_x, m1_y, mon_w, mon_h, rack_grid, 2)
+	var m1_inner_x = m1_x + 3
+	var m1_inner_y = m1_y + 3
+	var m1_inner_w = mon_w - 6
+	var m1_inner_h = mon_h - 6
+	p.rect(m1_inner_x, m1_inner_y, m1_inner_w, m1_inner_h, Color("030d07"))
+	var m1_mid_y = m1_inner_y + m1_inner_h / 2.0
+	p.rect(m1_inner_x, m1_mid_y, m1_inner_w, 1, green_dim)
+	p.rect(m1_inner_x + m1_inner_w / 2.0, m1_inner_y, 1, m1_inner_h, green_dim)
+	p.text("OSC", m1_inner_x + 2, m1_inner_y + 2, green_dim, 1)
+
+	var osc_freq = 0.08 + charge_val * 0.16
+	var osc_speed = 3.5 + charge_val * 7.5
+	var osc_amp = clampf((m1_inner_h * 0.32) * (0.4 + charge_val * 0.8), 3.0, m1_inner_h * 0.42)
+	var wave_color = red_alert if charge_val > 0.88 else (yellow_warn if charge_val > 0.72 else green_hot)
+	for px in range(m1_inner_x + 2, m1_inner_x + m1_inner_w - 2):
+		var phase = (px - m1_inner_x) * osc_freq + time * osc_speed
+		var jitter = 0.0 if reduced else (sin(time * 25.0 + px * 0.5) * (charge_val * 3.0 if charge_val > 0.8 else 0.0))
+		var wy = m1_mid_y + sin(phase) * osc_amp + jitter
+		if wy >= m1_inner_y + 2 and wy <= m1_inner_y + m1_inner_h - 3:
+			p.rect(px, wy, 1, 2, wave_color)
+
+	# MONITOR 2: Right Telemetry / Spectrum Bars
+	var m2_x = x + w - mon_w - 6
+	var m2_y = y + 8
+	p.rect(m2_x, m2_y, mon_w, mon_h, rack_bezel)
+	p.box(m2_x, m2_y, mon_w, mon_h, rack_grid, 2)
+	var m2_inner_x = m2_x + 3
+	var m2_inner_y = m2_y + 3
+	var m2_inner_w = mon_w - 6
+	var m2_inner_h = mon_h - 6
+	p.rect(m2_inner_x, m2_inner_y, m2_inner_w, m2_inner_h, Color("030d07"))
+	p.text("TEL", m2_inner_x + 2, m2_inner_y + 2, green_dim, 1)
+	p.text(str(roundi(charge_val * 100)) + "%", m2_inner_x + m2_inner_w - 20, m2_inner_y + 2, wave_color, 1)
+
+	var num_bars = 6
+	var bar_w = maxi(3, floori((m2_inner_w - 12.0) / num_bars) - 2)
+	var max_bar_h = m2_inner_h - 14
+	for b in range(num_bars):
+		var bx = m2_inner_x + 4 + b * (bar_w + 2)
+		var bar_target = clampf(charge_val * (0.6 + sin(b * 1.7 + time * 4.0) * 0.35 + 0.2), 0.12, 1.0)
+		var bar_h = roundi(max_bar_h * bar_target)
+		for seg in range(0, bar_h, 3):
+			var seg_y = m2_inner_y + m2_inner_h - 3 - seg - 2
+			var seg_color = green_dim
+			var seg_ratio = float(seg) / maxf(1.0, float(max_bar_h))
+			if seg_ratio > 0.8:
+				seg_color = red_alert if charge_val > 0.75 else yellow_warn
+			elif seg_ratio > 0.5:
+				seg_color = yellow_warn if charge_val > 0.6 else green_hot
+			else:
+				seg_color = green_mid
+			p.rect(bx, seg_y, bar_w, 2, seg_color)
+
+	# MONITOR 3: Center Upper Data Matrix / Status
+	var m3_x = m1_x + mon_w + 6
+	var m3_w = m2_x - m3_x - 6
+	var m3_y = y + 8
+	var m3_h = mini(mon_h, floori(h * 0.25))
+	if m3_w > 30 and m3_h > 18:
+		p.rect(m3_x, m3_y, m3_w, m3_h, rack_bezel)
+		p.box(m3_x, m3_y, m3_w, m3_h, rack_grid, 1)
+		p.rect(m3_x + 2, m3_y + 2, m3_w - 4, m3_h - 4, Color("030d07"))
+		p.text("STATUS", m3_x + m3_w / 2.0, m3_y + 3, green_dim, 1, true)
+		var status_str = "CRIT" if charge_val > 0.85 else ("WARN" if charge_val > 0.6 else "NOMINAL")
+		var status_col = red_alert if charge_val > 0.85 else (yellow_warn if charge_val > 0.6 else green_hot)
+		p.text(status_str, m3_x + m3_w / 2.0, m3_y + m3_h - 9, status_col, 1, true)
+
+	# LOWER RACKS: Status LEDs & Module Telemetry
+	var rack_y = m1_y + mon_h + 8
+	var rack_h = y + h - rack_y - 6
+	if rack_h > 24:
+		# Left rack module with LED bank
+		p.rect(m1_x, rack_y, mon_w, rack_h, Color("07140c"))
+		p.box(m1_x, rack_y, mon_w, rack_h, rack_grid, 1)
+		for slit_y in range(rack_y + 4, rack_y + rack_h - 16, 4):
+			p.rect(m1_x + 6, slit_y, mon_w - 12, 1, Color("030905"))
+		for led_i in range(4):
+			var lx = m1_x + 6 + led_i * floori((mon_w - 12) / 4.0)
+			var ly = rack_y + rack_h - 10
+			var led_on = false
+			var led_col = green_dim
+			if led_i == 0:
+				led_on = true
+				led_col = green_hot
+			elif led_i == 1:
+				led_on = reduced or (sin(time * 5.0) > 0.0)
+				led_col = green_mid
+			elif led_i == 2:
+				led_on = charge_val > 0.5
+				led_col = yellow_warn if led_on else Color("332910")
+			elif led_i == 3:
+				led_on = charge_val > 0.8 and (reduced or sin(time * 15.0) > 0.0)
+				led_col = red_alert if led_on else Color("331014")
+			p.rect(lx, ly, 4, 4, led_col if led_on else Color("09180f"))
+
+		# Right rack module with Needle Gauge
+		p.rect(m2_x, rack_y, mon_w, rack_h, Color("07140c"))
+		p.box(m2_x, rack_y, mon_w, rack_h, rack_grid, 1)
+		var gauge_cx = m2_x + mon_w / 2.0
+		var gauge_cy = rack_y + rack_h / 2.0
+		var gauge_r = mini(mon_w / 2 - 8, rack_h / 2 - 6)
+		if gauge_r > 8:
+			p.ring(gauge_cx, gauge_cy, gauge_r, rack_grid, 1, 0.75)
+			var needle_ang = -PI * 0.75 + charge_val * PI * 0.75
+			var nx = gauge_cx + cos(needle_ang) * (gauge_r - 2)
+			var ny = gauge_cy + sin(needle_ang) * (gauge_r - 2)
+			p.rect(gauge_cx - 1, gauge_cy - 1, 3, 3, green_dim)
+			p.rect(nx, ny, 2, 2, wave_color)
+			for step in range(5):
+				var lx = lerpf(gauge_cx, nx, step / 5.0)
+				var ly = lerpf(gauge_cy, ny, step / 5.0)
+				p.rect(lx, ly, 1, 1, wave_color)
+
+	# Scanline overlay
+	var scan_opacity = 0.06 if reduced else 0.14
+	for sy in range(y + 8, y + h - 8, 2):
+		p.rect(x + 4, sy, w - 8, 1, Color(0, 0, 0, scan_opacity))
+
+func draw_singularity_tail(cx: float, cy: float, rx: float) -> void:
+	var time = 0.0 if reduced else clock
+	var tip_x = cx + rx + 14
+	var tip_y = cy - 24
+	# Void accretion tail stream curving up from the cat's rear right
+	for step in range(14):
+		var t_fraction = float(step) / 13.0
+		var tx = cx + rx - 8 + sin(step * 0.16) * 22
+		var ty = cy + 28 - step * 4
+		var color_stream = Color("151024").lerp(Color("7b46ff"), t_fraction)
+		p.rect(tx - 3, ty - 3, 7, 7, color_stream)
+		p.rect(tx - 1, ty - 1, 3, 3, Color("c879ff") if step % 2 == 0 else Color("38efea"))
+	# Swirling gravitational lensing vortex at the tip of the tail
+	var spin = time * 4.5
+	# Outer distorted lensing field
+	p.ellipse(tip_x, tip_y, 16, 7, Color(0.22, 0.85, 1.0, 0.22))
+	p.ellipse(tip_x, tip_y, 12, 12, Color(0.78, 0.47, 1.0, 0.18))
+	# Swirling accretion spiral arms
+	for arm in range(4):
+		for r in range(4, 16, 2):
+			var a = spin + arm * (PI / 2.0) + r * 0.28
+			var px = tip_x + cos(a) * r
+			var py = tip_y + sin(a) * (r * 0.55) # Tilted accretion disk
+			var point_color = Color("ffffff") if r < 6 else (Color("38efea") if arm % 2 == 0 else Color("c879ff"))
+			p.rect(px, py, 2, 2, point_color)
+	# Photon ring
+	p.ring(tip_x, tip_y, 6, Color("e0f8ff"), 1)
+	# The Event Horizon (stark pitch-black center that absorbs all light)
+	p.ellipse(tip_x, tip_y, 4, 4, INK)
+
+func draw_eliteseum_pit(x: int, y: int, w: int, h: int) -> void:
+	var time = 0.0 if reduced else clock
+	var void_black = Color("08080a")
+	var pink = Color("ff2b8b")
+	var yellow = Color("f3ec32")
+	var cyan = Color("36c9ff")
+
+	# Void black basement
+	p.rect(x, y, w, h, void_black)
+
+	# Halftone distressed brick walls
+	var brick_w = 24
+	var brick_h = 10
+	var rows = ceili(float(h) / brick_h)
+	var cols = ceili(float(w) / brick_w) + 1
+	for r in range(rows):
+		var by = y + r * brick_h
+		var row_offset = (brick_w / 2) if (r % 2 == 1) else 0
+		p.rect(x, by, w, 1, Color("14131a")) # Mortar line
+		for c in range(cols):
+			var bx = x + c * brick_w - row_offset
+			if bx >= x - brick_w and bx < x + w:
+				p.rect(bx, by + 1, 1, brick_h - 1, Color("14131a"))
+				# Halftone newsprint stipple dots
+				if (r + c) % 2 == 0:
+					p.rect(bx + 6, by + 4, 1, 1, Color("221f2c"))
+					p.rect(bx + 16, by + 7, 1, 1, Color("221f2c"))
+
+	# Sweeping hot pink and caution-yellow stage strobes
+	var pink_aim = clampf(x + w * 0.45 + sin(time * 2.2) * (w * 0.35), x + 20, x + w - 20)
+	for row in range(0, h, 4):
+		var frac = float(row) / float(h)
+		var center_beam = lerpf(x + 15, pink_aim, frac)
+		var beam_width = 8 + frac * 48
+		p.rect(center_beam - beam_width / 2.0, y + row, beam_width, 4, Color(pink, 0.11))
+
+	var yellow_aim = clampf(x + w * 0.55 - cos(time * 1.8) * (w * 0.35), x + 20, x + w - 20)
+	for row in range(0, h, 4):
+		var frac = float(row) / float(h)
+		var center_beam = lerpf(x + w - 15, yellow_aim, frac)
+		var beam_width = 8 + frac * 42
+		p.rect(center_beam - beam_width / 2.0, y + row, beam_width, 4, Color(yellow, 0.09))
+
+	# Venue band graffiti & stickers tagged on the brick wall
+	p.rect(x + 14, y + 22, 28, 14, pink)
+	p.text("PIT", x + 18, y + 25, void_black, 1)
+	p.rect(x + 12, y + 20, 6, 4, Color("f0ede5")) # Corner peel tape
+
+	p.rect(x + w - 46, y + 28, 32, 14, yellow)
+	p.text("LIVE", x + w - 42, y + 31, void_black, 1)
+
+	p.rect(x + 16, y + 80, 24, 10, cyan)
+	p.rect(x + 18, y + 82, 20, 2, void_black)
+	p.rect(x + 18, y + 86, 12, 2, void_black)
+
+	for slash in range(4):
+		p.rect(x + w - 38 + slash * 6, y + 82, 3, 8, yellow)
+
+	# Crowd silhouettes and crowd surfers in the pit
+	var crowd_base_y = y + h - 16
+	for fan in range(ceili(float(w) / 12.0)):
+		var fx = x + 6 + fan * 12
+		var bounce = 0.0 if reduced else sin(time * 6.0 + fan * 1.3) * 2.5
+		var fy = crowd_base_y + bounce
+		p.ellipse(fx, fy - 8, 4, 5, Color("111018"))
+		p.rect(fx - 4, fy - 3, 8, y + h - fy + 3, Color("111018"))
+		# Devil horns \m/
+		if fan % 2 == 0:
+			var arm_x = fx + (2 if fan % 4 == 0 else -2)
+			p.rect(arm_x, fy - 18, 2, 10, Color("111018"))
+			p.rect(arm_x - 1, fy - 20, 1, 3, Color("111018"))
+			p.rect(arm_x + 2, fy - 20, 1, 3, Color("111018"))
+			p.rect(arm_x - 1, fy - 21, 1, 1, pink if fan % 4 == 0 else yellow)
+
+	# Crowd surfer carried above the mosh pit
+	var surfer_x = x + w * 0.62 + (sin(time * 1.5) * 12.0 if not reduced else 0.0)
+	var surfer_y = crowd_base_y - 20 + (cos(time * 3.0) * 2.0 if not reduced else 0.0)
+	p.ellipse(surfer_x, surfer_y, 11, 4, Color("151320"))
+	p.ellipse(surfer_x + 9, surfer_y - 2, 4, 3, Color("151320"))
+	p.rect(surfer_x - 13, surfer_y - 1, 8, 3, Color("151320"))
+	p.rect(surfer_x - 4, surfer_y - 6, 2, 6, pink)
+
+func draw_vip_laminate(cx: float, hy: float) -> void:
+	var pink = Color("ff2b8b")
+	var yellow = Color("f3ec32")
+	var cyan = Color("36c9ff")
+	var card_black = Color("090909")
+
+	# Black lanyard straps with hot-pink inner stitch
+	for step in range(16):
+		var lx1 = cx - 24 + step * 1.5
+		var ly1 = hy + 30 + step * 1.1
+		p.rect(lx1, ly1, 3, 2, Color("121216"))
+		p.rect(lx1 + 1, ly1, 1, 1, pink)
+
+		var lx2 = cx + 20 - step * 1.4
+		var ly2 = hy + 30 + step * 1.1
+		p.rect(lx2, ly2, 3, 2, Color("121216"))
+		p.rect(lx2 + 1, ly2, 1, 1, pink)
+
+	# Silver metallic clip & swivel hook
+	p.rect(cx - 2, hy + 46, 5, 4, Color("c5d4e0"))
+	p.rect(cx - 1, hy + 49, 3, 3, Color("788796"))
+
+	# Laminated pass card (26x24 px)
+	var bx = cx - 13
+	var by = hy + 51
+	p.rect(bx - 1, by - 1, 28, 26, Color(0.85, 0.92, 1.0, 0.35))
+	p.rect(bx, by, 26, 24, card_black)
+
+	# Hot pink top header banner
+	p.rect(bx, by, 26, 5, pink)
+	p.rect(bx + 11, by - 1, 4, 2, Color("342c38")) # Lanyard punch slot
+
+	# Bold Caution Yellow "VIP" text
+	p.text("VIP", cx, by + 7, yellow, 1, true)
+
+	# Bottom cyan band and barcode stamp
+	p.rect(bx + 2, by + 16, 22, 1, cyan)
+	for k in range(6):
+		p.rect(bx + 3 + k * 3, by + 18, 1, 4, Color("f0ede5"))
+		p.rect(bx + 4 + k * 3, by + 18, 1, 3, Color("f0ede5"))
+
+	# Lamination surface sheen highlight
+	p.rect(bx + 2, by + 2, 5, 1, Color(1, 1, 1, 0.6))
+	p.rect(bx + 2, by + 3, 2, 3, Color(1, 1, 1, 0.4))
+
+func draw_pixel_torch(hand: float, cy: float, paw: Color) -> void:
+	var time = 0.0 if reduced else clock
+	var frame = int(fposmod(time * 6.0, 3.0))
+
+	# Blocky wooden shaft (width 6px, length 32px)
+	p.rect(hand - 3, cy - 16, 6, 32, Color("472b1b"))
+	p.rect(hand - 2, cy - 15, 4, 30, Color("7a4c2f"))
+	p.rect(hand - 1, cy - 11, 2, 8, Color("966340"))
+	p.rect(hand, cy + 3, 2, 7, Color("966340"))
+	p.rect(hand - 4, cy - 18, 8, 3, Color("261914"))
+
+	# Cat paw holding the torch
+	p.ellipse(hand, cy + 8, 6, 5, paw)
+
+	# Ambient warm flame glow
+	p.ellipse(hand, cy - 25, 15, 15, Color(1.0, 0.65, 0.15, 0.09))
+
+	# Animated 3-frame 16-bit blocky flame
+	var orange_dark = Color("e05c1f")
+	var orange_hot = Color("f58b27")
+	var yellow_bright = Color("ffe047")
+	var white_core = Color("fffbe0")
+
+	if frame == 0:
+		p.rect(hand - 4, cy - 30, 8, 12, orange_dark)
+		p.rect(hand - 3, cy - 32, 6, 12, orange_hot)
+		p.rect(hand - 2, cy - 30, 4, 8, yellow_bright)
+		p.rect(hand - 1, cy - 28, 2, 5, white_core)
+		p.rect(hand - 1, cy - 34, 2, 2, yellow_bright)
+	elif frame == 1:
+		p.rect(hand - 5, cy - 31, 8, 13, orange_dark)
+		p.rect(hand - 4, cy - 33, 6, 13, orange_hot)
+		p.rect(hand - 3, cy - 31, 4, 9, yellow_bright)
+		p.rect(hand - 2, cy - 29, 2, 5, white_core)
+		p.rect(hand - 3, cy - 36, 2, 2, orange_hot)
+	else:
+		p.rect(hand - 3, cy - 30, 8, 12, orange_dark)
+		p.rect(hand - 2, cy - 32, 6, 12, orange_hot)
+		p.rect(hand - 1, cy - 30, 4, 8, yellow_bright)
+		p.rect(hand, cy - 28, 2, 5, white_core)
+		p.rect(hand + 1, cy - 37, 2, 2, orange_hot)
+		p.rect(hand - 1, cy - 35, 1, 1, yellow_bright)
